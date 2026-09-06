@@ -1,0 +1,350 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  role         String          // "ADMIN", "STUDENT", "INSTRUCTOR", "MENTOR"
+  avatarUrl    String?
+  phone        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  studentProfile   StudentProfile? @relation("StudentUser")
+  mentorStudents   StudentProfile[] @relation("StudentMentor")
+  instructorClasses Class[]        @relation("InstructorClasses")
+  mentorSessions   MentorSession[] @relation("MentorSessions")
+  studentSessions  MentorSession[] @relation("StudentSessions")
+  attendanceRecords Attendance[]   @relation("UserAttendance")
+  submissions      Submission[]
+  contestSubmissions ContestSubmission[]
+  certificates     Certificate[]
+  notifications    Notification[]
+  supportTickets   SupportTicket[] @relation("StudentTickets")
+  supportMessages  SupportMessage[]
+  achievements     Achievement[]
+}
+
+model StudentProfile {
+  id             String      @id @default(uuid())
+  userId         String      @unique
+  user           User        @relation("StudentUser", fields: [userId], references: [id], onDelete: Cascade)
+  courseId       String
+  course         Course      @relation(fields: [courseId], references: [id])
+  batchId        String?
+  batch          Batch?      @relation(fields: [batchId], references: [id])
+  mentorId       String?
+  mentor         User?       @relation("StudentMentor", fields: [mentorId], references: [id])
+  enrollmentDate DateTime    @default(now())
+  status         String      @default("ACTIVE") // "ACTIVE", "COMPLETED", "SUSPENDED"
+}
+
+model Course {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique @default("")
+  description String
+  duration    String    // e.g. "24 Weeks"
+  price       Int       @default(0)
+  priceOriginal Int?
+  mode        String    @default("Live")
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  modules         Module[]
+  batches         Batch[]
+  studentProfiles StudentProfile[]
+  certificates    Certificate[]
+
+  projects        CourseProject[]
+  features        CourseFeature[]
+  prerequisites   CoursePrerequisite[]
+  outcomes        CourseOutcome[]
+  faqs            CourseFAQ[]
+}
+
+model Batch {
+  id           String           @id @default(uuid())
+  name         String
+  courseId     String
+  course       Course           @relation(fields: [courseId], references: [id])
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  students     StudentProfile[]
+  classes      Class[]
+}
+
+model Module {
+  id        String   @id @default(uuid())
+  title     String
+  order     Int
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  classes   Class[]
+  lessons   CourseLesson[]
+}
+
+model Class {
+  id           String      @id @default(uuid())
+  title        String
+  description  String?
+  date         String      // e.g. "2026-08-29"
+  startTime    String      // e.g. "19:00"
+  endTime      String      // e.g. "20:30"
+  zoomLink     String
+  recordingUrl String?
+  status       String      @default("UPCOMING") // "UPCOMING", "LIVE", "COMPLETED"
+  instructorId String
+  instructor   User        @relation("InstructorClasses", fields: [instructorId], references: [id])
+  moduleId     String
+  module       Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  batchId      String
+  batch        Batch       @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  preRead      String?     // markdown text or JSON
+  postRead     String?     // markdown text or JSON
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  attendance   Attendance[]
+  assignments  Assignment[]
+}
+
+model Attendance {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation("UserAttendance", fields: [studentId], references: [id], onDelete: Cascade)
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  status      String   @default("ABSENT") // "PRESENT", "ABSENT", "LATE", "EXCUSED"
+  markedAt    DateTime @default(now())
+  markedById  String
+}
+
+model Assignment {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  classId     String
+  class       Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  difficulty  String     @default("MEDIUM") // "EASY", "MEDIUM", "HARD"
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  questions   Question[]
+}
+
+model Question {
+  id            String      @id @default(uuid())
+  assignmentId  String
+  assignment    Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  text          String
+  type          String      // "MCQ", "MSQ", "CODING", "SQL", "NUMERICAL", "DESCRIPTIVE"
+  options       String?     // JSON serialized list of options for MCQs
+  correctAnswer String
+  explanation   String?
+  points        Int         @default(10)
+
+  submissions   Submission[]
+}
+
+model Submission {
+  id           String    @id @default(uuid())
+  studentId    String
+  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer       String
+  isCorrect    Boolean
+  score        Int
+  timeSpent    Int       // in seconds
+  submittedAt  DateTime  @default(now())
+}
+
+model Contest {
+  id              String    @id @default(uuid())
+  title           String
+  description     String?
+  durationMinutes Int
+  startTime       DateTime
+  status          String    @default("UPCOMING") // "UPCOMING", "LIVE", "PAST"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  questions       ContestQuestion[]
+}
+
+model ContestQuestion {
+  id            String   @id @default(uuid())
+  contestId     String
+  contest       Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  text          String
+  type          String   // "MCQ", "CODING", etc
+  options       String?  // JSON serialized
+  correctAnswer String
+  explanation   String?
+  points        Int      @default(20)
+
+  submissions   ContestSubmission[]
+}
+
+model ContestSubmission {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questionId  String
+  question    ContestQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answer      String
+  score       Int
+  isCorrect   Boolean
+  submittedAt DateTime @default(now())
+}
+
+model MentorSession {
+  id          String   @id @default(uuid())
+  mentorId    String
+  mentor      User     @relation("MentorSessions", fields: [mentorId], references: [id])
+  studentId   String
+  student     User     @relation("StudentSessions", fields: [studentId], references: [id])
+  date        String   // e.g. "2026-08-31"
+  time        String   // e.g. "18:00"
+  topic       String
+  zoomLink    String?
+  status      String   @default("SCHEDULED") // "SCHEDULED", "COMPLETED", "CANCELLED"
+  notes       String?  // Mentor's internal notes
+  feedback    String?  // Feedback provided to student
+  actionItems String?  // Markdown list of tasks
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  studentId     String
+  student       User     @relation(fields: [studentId], references: [id])
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id])
+  issuedDate    String
+  certificateId String   @unique
+  status        String   @default("ISSUED") // "ISSUED", "REVOKED"
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation("StudentTickets", fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    String   // "Technical Issue", "Class Issue", "Attendance", "Assignment", etc
+  status      String   @default("OPEN") // "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    SupportMessage[]
+}
+
+model SupportMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  icon        String   // Lucide icon name
+  earnedAt    DateTime @default(now())
+}
+
+model CourseProject {
+  id               String   @id @default(uuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title            String
+  problemStatement String
+  technologies     String   // comma-separated or JSON
+  skillsCovered    String   // comma-separated or JSON
+  difficulty       String   @default("MEDIUM") // "EASY", "MEDIUM", "HARD"
+  outcome          String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model CourseFeature {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  text      String
+  icon      String?  // Lucide icon name
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CoursePrerequisite {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseOutcome {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseFAQ {
+  id        String   @id @default(uuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseLesson {
+  id          String   @id @default(uuid())
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  order       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

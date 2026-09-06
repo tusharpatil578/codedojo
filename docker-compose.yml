@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: codedojo-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: codedojo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codedojo-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:password123@db:5432/codedojo?schema=public
+      - DIRECT_URL=postgresql://postgres:password123@db:5432/codedojo?schema=public
+      - JWT_SECRET=codedojo_super_secret_key_128_128_0_olive_green
+      - GEMINI_API_KEY=mock-key-for-local-testing
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

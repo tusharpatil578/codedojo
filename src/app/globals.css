@@ -1,26 +1,255 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060913;
+  --foreground: #FFFFFF;
+  --primary: #10B981;
+  --primary-hover: #059669;
+  --card-bg: rgba(10, 15, 26, 0.75);
+  --card-border: rgba(16, 185, 129, 0.1);
+  --sidebar-bg: #070B16;
+  --text-muted: #94A3B8;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
 }
+
+/* Glassmorphism Design Utilities */
+.glass-card {
+  background: rgba(10, 15, 26, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(16, 185, 129, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 12px 40px 0 rgba(16, 185, 129, 0.15), inset 0 0 12px rgba(16, 185, 129, 0.05);
+  transform: translateY(-2px);
+}
+
+.glass-input {
+  background: rgba(7, 11, 22, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 8px;
+  color: #FFFFFF;
+  padding: 10px 16px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+.glass-button {
+  background: var(--primary);
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.glass-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.glass-button:active {
+  transform: translateY(0);
+}
+
+/* Chrome Metal Text Style */
+.metal-text {
+  background: linear-gradient(135deg, #f3f4f6 0%, #cbd5e1 30%, #ffffff 50%, #94a3b8 70%, #475569 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.1);
+  filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.2));
+}
+
+/* Neon Doom Green Glow utility */
+.doom-glow {
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+}
+
+.doom-glow-text {
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.8), 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(6, 9, 19, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+/* Layout animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Cosmic Incursion Scanline Grid background */
+.incursion-grid {
+  position: relative;
+  overflow: hidden;
+}
+
+.incursion-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Scanline animation for holographic screens */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.scanline::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.4), transparent);
+  animation: scanline 6s linear infinite;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+}
+
+/* Periodic Cosmic Lightning Sparks */
+@keyframes electricSpark {
+  0%, 94%, 98%, 100% {
+    opacity: 0;
+    box-shadow: none;
+  }
+  95%, 97% {
+    opacity: 0.8;
+    box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.6), inset 0 0 10px 1px rgba(16, 185, 129, 0.4);
+  }
+  96% {
+    opacity: 1;
+    box-shadow: 0 0 25px 4px rgba(0, 255, 102, 0.9), inset 0 0 15px 2px rgba(0, 255, 102, 0.6);
+  }
+}
+
+.doom-border-spark {
+  animation: electricSpark 8s infinite ease-in-out;
+}
+
+/* Thanos Snap Particle Disintegration Effect */
+@keyframes thanosDisintegrate {
+  0% {
+    opacity: 1;
+    filter: blur(0px) contrast(100%);
+    transform: scale(1) skew(0deg);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(3px) sepia(80%) hue-rotate(260deg);
+    transform: scale(0.98) translate(-6px, -4px) rotate(1deg);
+  }
+  100% {
+    opacity: 0.15;
+    filter: blur(8px) grayscale(100%);
+    transform: scale(0.92) translate(-15px, -10px) rotate(2deg);
+    pointer-events: none;
+  }
+}
+
+.thanos-disintegrated {
+  animation: thanosDisintegrate 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Doctor Doom Latveria Rune Spin */
+@keyframes doomRuneRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.doom-rune-spin {
+  animation: doomRuneRotate 40s linear infinite;
+}
+
+/* Cosmic Pulsing Glow */
+@keyframes cosmicPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.cosmic-pulse {
+  animation: cosmicPulse 3s ease-in-out infinite;
+}
+
+
